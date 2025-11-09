@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Table, MetaData
 from sqlalchemy.orm import sessionmaker
 import pandas as pd
 from collections import Counter
+from datetime import datetime, timedelta
 
 # --- Configurazione DB ---
 DB_PATH = "piatti.db"
@@ -55,33 +56,6 @@ if st.button("💾 Salva liste"):
     session.commit()
     st.success("Liste salvate nel database!")
     st.rerun()
-
-# --- Sezione: Visualizza ed elimina ingredienti (compattabili) ---
-st.subheader("Ingredienti disponibili")
-compact_all = st.checkbox("Compatta tutte le liste", value=True)
-ingredienti_db = session.execute(ingredienti.select()).fetchall()
-categorie = ["cereali", "verdure", "proteine", "condimenti"]
-
-for cat in categorie:
-    lista = [i for i in ingredienti_db if i.categoria == cat]
-    count = len(lista)
-    with st.expander(f"{cat.capitalize()} ({count})", expanded=not compact_all):
-        if count == 0:
-            st.info(f"Nessun elemento per {cat}.")
-        else:
-            if st.button(f"❌ Elimina tutti {cat}", key=f"del_all_{cat}"):
-                session.execute(ingredienti.delete().where(ingredienti.c.categoria == cat))
-                session.commit()
-                st.success(f"Lista {cat} eliminata.")
-                st.rerun()
-            for i in lista:
-                c1, c2 = st.columns([4,1])
-                c1.write(f"- {i.nome}")
-                if c2.button("❌ Elimina", key=f"del_{i.id}"):
-                    session.execute(ingredienti.delete().where(ingredienti.c.id == i.id))
-                    session.commit()
-                    st.rerun()
-
 # --- Sezione: Calendario settimanale COMPATTO ---
 st.subheader("📅 Calendario settimanale (Pranzo e Cena)")
 ingredienti_db = session.execute(ingredienti.select()).fetchall()
@@ -131,9 +105,8 @@ if st.button("💾 Salva calendario"):
     session.commit()
     st.success("Calendario salvato!")
     st.rerun()
-
-# --- Visualizzazione riassuntiva + Promemoria ammollo ---
-st.subheader("📖 Tabella riassuntiva Giorno e Pasto con categorie")
+# --- Visualizzazione riassuntiva grafica (collassabile) ---
+st.subheader("📖 Calendario riassuntivo grafico")
 calendario_db = session.execute(calendario.select()).mappings().all()
 
 if calendario_db:
@@ -141,8 +114,26 @@ if calendario_db:
     df_saved["giorno"] = pd.Categorical(df_saved["giorno"], categories=giorni, ordered=True)
     df_saved["pasto"] = pd.Categorical(df_saved["pasto"], categories=pasti, ordered=True)
     df_saved = df_saved.sort_values(["giorno", "pasto"])
-    df_view = df_saved[["giorno", "pasto", "cereali", "verdure", "proteine", "condimenti"]].reset_index(drop=True)
-    st.table(df_view)
+
+    for g in giorni:
+        df_day = df_saved[df_saved["giorno"] == g]
+        if not df_day.empty:
+            with st.expander(f"📅 {g}", expanded=False):
+                for _, row in df_day.iterrows():
+                    pasto = row["pasto"]
+                    st.markdown(
+                        f"""
+                        <div style="padding:10px; margin:5px; border-radius:8px; background-color:#f0f8ff; color:#000000;">
+                            <b>{pasto}</b><br>
+                            🍚 Cereali: {row['cereali']}<br>
+                            🥦 Verdure: {row['verdure']}<br>
+                            🍗 Proteine: {row['proteine']}<br>
+                            🧂 Condimenti: {row['condimenti']}
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
 
     # --- Promemoria ammollo legumi in tabella con quantità ---
     def promemoria_ammollo(df):
@@ -161,16 +152,12 @@ if calendario_db:
                         giorno_precedente = giorni[prev_idx]
                         avvisi.append({"Giorno": giorno_precedente, "Legume": legume})
 
-        # Raggruppa per Giorno + Legume e conta quante volte compare
         if avvisi:
             df_avvisi = pd.DataFrame(avvisi)
             df_avvisi = df_avvisi.groupby(["Giorno", "Legume"]).size().reset_index(name="Quantità")
             return df_avvisi
         else:
             return pd.DataFrame(columns=["Giorno", "Legume", "Quantità"])
-
-    # Funzione per creare file .ics
-    from datetime import datetime, timedelta
 
     def crea_file_ics(df_avvisi):
         eventi = []
@@ -197,7 +184,6 @@ END:VEVENT""")
         ics_content = "BEGIN:VCALENDAR\nVERSION:2.0\n" + "\n".join(eventi) + "\nEND:VCALENDAR"
         return ics_content
 
-    # Mostra tabella e pulsante download
     df_avvisi = promemoria_ammollo(df_saved)
     if not df_avvisi.empty:
         st.subheader("⏰ Tabella promemoria ammollo legumi")
