@@ -3,8 +3,9 @@ from db import session, calendario
 from datetime import datetime, timedelta
 from fpdf import FPDF
 import io
+import os
 
-# Configurazione pagina
+# Configura la pagina
 st.set_page_config(page_title="Esporta pasti (.ics + .pdf)", layout="wide")
 st.title("📦 Esporta pasti settimanali (.ics + .pdf)")
 
@@ -13,7 +14,7 @@ giorni = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Dome
 pasti = ["Pranzo", "Cena"]
 idx = {g:i for i,g in enumerate(giorni)}
 
-# Recupero dati dal database
+# Recupera dati dal database
 calendario_db = session.execute(calendario.select()).mappings().all()
 
 # Funzione per creare file ICS
@@ -25,20 +26,17 @@ def crea_eventi_ics(calendario_db):
         giorno = row["giorno"]
         pasto = row["pasto"]
 
-        # Ingredienti
         cereali = row.get("cereali", "")
         verdure = row.get("verdure", "")
         proteine = row.get("proteine", "")
         condimenti = row.get("condimenti", "")
 
-        # Titolo e descrizione
         titolo = f"{giorno} - {pasto} 🍽️ {cereali}, {proteine}, {verdure}"
         descrizione = f"""🍚 Cereali: {cereali}
 🥦 Verdure: {verdure}
 🫘 Proteine: {proteine}
 🧂 Condimenti: {condimenti}"""
 
-        # Data e orario
         delta = (idx[giorno] - oggi.weekday()) % 7
         data_evento = oggi + timedelta(days=delta)
         ora_evento = "130000" if pasto == "Pranzo" else "200000"
@@ -54,25 +52,31 @@ END:VEVENT""")
 
     return "BEGIN:VCALENDAR\nVERSION:2.0\n" + "\n".join(eventi) + "\nEND:VCALENDAR"
 
-# Funzione per creare file PDF
+# Funzione per creare PDF con emoji usando fpdf2
 def crea_pdf(calendario_db):
     pdf = FPDF()
+    font_path = "DejaVuSans.ttf"
+
+    if not os.path.exists(font_path):
+        st.error("⚠️ Il file DejaVuSans.ttf non è presente nella cartella del progetto.")
+        return None
+
+    pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
+    pdf.set_font("DejaVu", "", 16)
     pdf.cell(0, 10, "📅 Pasti settimanali", ln=True)
 
     for giorno in giorni:
-        pdf.set_font("Arial", "B", 14)
+        pdf.set_font("DejaVu", "", 14)
         pdf.cell(0, 10, f"\n{giorno}", ln=True)
 
         for pasto in pasti:
             pasti_giorno = [r for r in calendario_db if r["giorno"] == giorno and r["pasto"] == pasto]
             if pasti_giorno:
                 row = pasti_giorno[0]
-                pdf.set_font("Arial", "B", 12)
+                pdf.set_font("DejaVu", "", 12)
                 pdf.cell(0, 10, f"{pasto} 🍽️", ln=True)
-                pdf.set_font("Arial", "", 12)
                 pdf.multi_cell(0, 8, f"""🍚 Cereali: {row['cereali']}
 🥦 Verdure: {row['verdure']}
 🫘 Proteine: {row['proteine']}
@@ -95,11 +99,12 @@ if calendario_db:
 
     # Bottone PDF
     pdf_file = crea_pdf(calendario_db)
-    st.download_button(
-        label="📄 Scarica pasti settimanali (.pdf)",
-        data=pdf_file,
-        file_name="pasti_settimanali.pdf",
-        mime="application/pdf"
-    )
+    if pdf_file:
+        st.download_button(
+            label="📄 Scarica pasti settimanali (.pdf)",
+            data=pdf_file,
+            file_name="pasti_settimanali.pdf",
+            mime="application/pdf"
+        )
 else:
     st.info("Nessun pasto salvato nel calendario.")
