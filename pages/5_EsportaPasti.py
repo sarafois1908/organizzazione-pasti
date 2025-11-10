@@ -72,9 +72,13 @@ def crea_pdf(calendario_db):
         pdf.cell(0, 10, f"\n{giorno}", ln=True)
 
         for pasto in pasti:
-            pasti_giorno = [r for r in calendario_db if r["giorno"] == giorno and r["pasto"] == pasto]
-            if len(pasti_giorno) > 0:
-                row = pasti_giorno[0]
+            pasti_giorno = next(
+                (r for r in calendario_db if r["giorno"] == giorno and r["pasto"] == pasto),
+                None
+            )
+
+            if pasti_giorno:
+                row = pasti_giorno
                 pdf.set_font("DejaVu", "", 12)
                 pdf.cell(0, 10, f"{pasto} 🍽️", ln=True)
                 pdf.multi_cell(0, 8, f"""🍚 Cereali: {row['cereali']}
