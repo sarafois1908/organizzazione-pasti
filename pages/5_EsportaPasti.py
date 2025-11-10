@@ -51,17 +51,23 @@ END:VEVENT""")
 
     return "BEGIN:VCALENDAR\nVERSION:2.0\n" + "\n".join(eventi) + "\nEND:VCALENDAR"
 
-# Funzione per creare PDF semplice
+# Funzione per creare PDF con layout ordinato
 def crea_pdf(calendario_db):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(0, 10, "Pasti settimanali", ln=True)
+
+    # Titolo principale
+    pdf.set_font("Arial", "B", 18)
+    pdf.cell(0, 12, "Pasti settimanali", ln=True)
+    pdf.ln(5)
 
     for giorno in giorni:
+        # Intestazione del giorno
         pdf.set_font("Arial", "B", 14)
-        pdf.cell(0, 10, f"\n{giorno}", ln=True)
+        pdf.set_text_color(0, 0, 128)  # blu scuro
+        pdf.cell(0, 10, giorno, ln=True)
+        pdf.set_text_color(0, 0, 0)  # reset colore
 
         for pasto in pasti:
             pasto_data = next(
@@ -69,15 +75,21 @@ def crea_pdf(calendario_db):
                 None
             )
 
-            pdf.set_font("Arial", "", 12)
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(0, 8, f"{pasto}:", ln=True)
+
+            pdf.set_font("Arial", "", 11)
             if pasto_data:
-                pdf.cell(0, 10, f"{pasto}:", ln=True)
-                pdf.multi_cell(0, 8, f"""Cereali: {pasto_data['cereali']}
+                pdf.multi_cell(0, 7, f"""Cereali: {pasto_data['cereali']}
 Verdure: {pasto_data['verdure']}
 Proteine: {pasto_data['proteine']}
 Condimenti: {pasto_data['condimenti']}""")
             else:
-                pdf.cell(0, 10, f"{pasto}: nessun pasto salvato", ln=True)
+                pdf.cell(0, 7, "Nessun pasto salvato", ln=True)
+
+            pdf.ln(3)  # spazio tra pranzo e cena
+
+        pdf.ln(5)  # spazio tra giorni
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     return pdf_bytes
