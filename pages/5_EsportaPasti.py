@@ -2,7 +2,6 @@ import streamlit as st
 from db import session, calendario
 from datetime import datetime, timedelta
 from fpdf import FPDF
-import io
 import os
 
 # Configura la pagina
@@ -65,31 +64,30 @@ def crea_pdf(calendario_db):
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     pdf.set_font("DejaVu", "", 16)
-    pdf.cell(0, 10, "Pasti settimanali", ln=True)
+    pdf.cell(0, 10, "📅 Pasti settimanali", ln=True)
 
     for giorno in giorni:
         pdf.set_font("DejaVu", "", 14)
         pdf.cell(0, 10, f"\n{giorno}", ln=True)
 
         for pasto in pasti:
-            pasti_giorno = next(
+            pasto_data = next(
                 (r for r in calendario_db if r["giorno"] == giorno and r["pasto"] == pasto),
                 None
             )
 
             pdf.set_font("DejaVu", "", 12)
-            if pasti_giorno:
-                pdf.cell(0, 10, f"{pasto} -", ln=True)
-                pdf.multi_cell(0, 8, f"""Cereali: {pasti_giorno['cereali']}
-Verdure: {pasti_giorno['verdure']}
-Proteine: {pasti_giorno['proteine']}
-Condimenti: {pasti_giorno['condimenti']}""")
+            if pasto_data:
+                pdf.cell(0, 10, f"{pasto} 🍽", ln=True)
+                pdf.multi_cell(0, 8, f"""🍚 Cereali: {pasto_data['cereali']}
+🥦 Verdure: {pasto_data['verdure']}
+🫘 Proteine: {pasto_data['proteine']}
+🧂 Condimenti: {pasto_data['condimenti']}""")
             else:
                 pdf.cell(0, 10, f"{pasto}: nessun pasto salvato", ln=True)
 
     pdf_bytes = pdf.output(dest='S').encode('latin1')
     return pdf_bytes
-
 
 # Se ci sono pasti salvati
 if calendario_db:
