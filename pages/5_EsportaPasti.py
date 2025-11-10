@@ -6,7 +6,7 @@ import os
 
 # Configura la pagina
 st.set_page_config(page_title="Esporta pasti (.ics + .pdf)", layout="wide")
-st.title("📦 Esporta pasti settimanali (.ics + .pdf)")
+st.title("Esporta pasti settimanali (.ics + .pdf)")
 
 # Giorni e pasti
 giorni = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
@@ -30,7 +30,7 @@ def crea_eventi_ics(calendario_db):
         proteine = row.get("proteine", "")
         condimenti = row.get("condimenti", "")
 
-        titolo = f"{giorno} - {pasto} {cereali}, {proteine}, {verdure}"
+        titolo = f"{giorno} - {pasto}: {cereali}, {proteine}, {verdure}"
         descrizione = f"""Cereali: {cereali}
 Verdure: {verdure}
 Proteine: {proteine}
@@ -51,23 +51,16 @@ END:VEVENT""")
 
     return "BEGIN:VCALENDAR\nVERSION:2.0\n" + "\n".join(eventi) + "\nEND:VCALENDAR"
 
-# Funzione per creare PDF con emoji semplificate
+# Funzione per creare PDF semplice
 def crea_pdf(calendario_db):
     pdf = FPDF()
-    font_path = "DejaVuSans.ttf"
-
-    if not os.path.exists(font_path):
-        st.error("⚠️ Il file DejaVuSans.ttf non è presente nella cartella del progetto.")
-        return None
-
-    pdf.add_font("DejaVu", "", font_path, uni=True)
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
-    pdf.set_font("DejaVu", "", 16)
-    pdf.cell(0, 10, "📅 Pasti settimanali", ln=True)
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, "Pasti settimanali", ln=True)
 
     for giorno in giorni:
-        pdf.set_font("DejaVu", "", 14)
+        pdf.set_font("Arial", "B", 14)
         pdf.cell(0, 10, f"\n{giorno}", ln=True)
 
         for pasto in pasti:
@@ -76,13 +69,13 @@ def crea_pdf(calendario_db):
                 None
             )
 
-            pdf.set_font("DejaVu", "", 12)
+            pdf.set_font("Arial", "", 12)
             if pasto_data:
-                pdf.cell(0, 10, f"{pasto} 🍽", ln=True)
-                pdf.multi_cell(0, 8, f"""🍚 Cereali: {pasto_data['cereali']}
-🥦 Verdure: {pasto_data['verdure']}
-🫘 Proteine: {pasto_data['proteine']}
-🧂 Condimenti: {pasto_data['condimenti']}""")
+                pdf.cell(0, 10, f"{pasto}:", ln=True)
+                pdf.multi_cell(0, 8, f"""Cereali: {pasto_data['cereali']}
+Verdure: {pasto_data['verdure']}
+Proteine: {pasto_data['proteine']}
+Condimenti: {pasto_data['condimenti']}""")
             else:
                 pdf.cell(0, 10, f"{pasto}: nessun pasto salvato", ln=True)
 
@@ -94,7 +87,7 @@ if calendario_db:
     # Bottone ICS
     ics_file = crea_eventi_ics(calendario_db)
     st.download_button(
-        label="📥 Scarica pasti settimanali (.ics)",
+        label="Scarica pasti settimanali (.ics)",
         data=ics_file,
         file_name="pasti_settimanali.ics",
         mime="text/calendar"
@@ -104,7 +97,7 @@ if calendario_db:
     pdf_file = crea_pdf(calendario_db)
     if pdf_file:
         st.download_button(
-            label="📄 Scarica pasti settimanali (.pdf)",
+            label="Scarica pasti settimanali (.pdf)",
             data=pdf_file,
             file_name="pasti_settimanali.pdf",
             mime="application/pdf"
