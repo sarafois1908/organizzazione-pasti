@@ -87,9 +87,9 @@ Condimenti: {pasti_giorno['condimenti']}""")
             else:
                 pdf.cell(0, 10, f"{pasto}: nessun pasto salvato", ln=True)
 
-    buffer = io.BytesIO()
-    pdf.output(buffer)
-    return buffer.getvalue()
+    pdf_bytes = pdf.output(dest='S').encode('latin1')
+    return pdf_bytes
+
 
 # Se ci sono pasti salvati
 if calendario_db:
