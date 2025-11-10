@@ -81,6 +81,10 @@ def crea_pdf(calendario_db):
 🥦 Verdure: {row['verdure']}
 🫘 Proteine: {row['proteine']}
 🧂 Condimenti: {row['condimenti']}""")
+            else:
+                pdf.set_font("DejaVu", "", 12)
+                pdf.cell(0, 10, f"{pasto}: nessun pasto salvato", ln=True)
+
 
     buffer = io.BytesIO()
     pdf.output(buffer)
