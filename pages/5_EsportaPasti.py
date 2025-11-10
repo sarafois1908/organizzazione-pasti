@@ -99,7 +99,7 @@ if calendario_db:
     # Bottone ICS
     ics_file = crea_eventi_ics(calendario_db)
     st.download_button(
-        label="Scarica pasti settimanali (.ics)",
+        label="📅Scarica pasti settimanali (.ics)",
         data=ics_file,
         file_name="pasti_settimanali.ics",
         mime="text/calendar"
@@ -109,7 +109,7 @@ if calendario_db:
     pdf_file = crea_pdf(calendario_db)
     if pdf_file:
         st.download_button(
-            label="Scarica pasti settimanali (.pdf)",
+            label="📄Scarica pasti settimanali (.pdf)",
             data=pdf_file,
             file_name="pasti_settimanali.pdf",
             mime="application/pdf"
