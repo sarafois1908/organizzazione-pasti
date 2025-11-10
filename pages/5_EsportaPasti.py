@@ -10,9 +10,9 @@ st.set_page_config(page_title="Esporta pasti (.ics + .pdf)", layout="wide")
 st.title("📦 Esporta pasti settimanali (.ics + .pdf)")
 
 # Giorni e pasti
-giorni = ["Lunedì","Martedì","Mercoledì","Giovedì","Venerdì","Sabato","Domenica"]
+giorni = ["Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica"]
 pasti = ["Pranzo", "Cena"]
-idx = {g:i for i,g in enumerate(giorni)}
+idx = {g: i for i, g in enumerate(giorni)}
 
 # Recupera dati dal database
 calendario_db = session.execute(calendario.select()).mappings().all()
@@ -31,11 +31,11 @@ def crea_eventi_ics(calendario_db):
         proteine = row.get("proteine", "")
         condimenti = row.get("condimenti", "")
 
-        titolo = f"{giorno} - {pasto} 🍽️ {cereali}, {proteine}, {verdure}"
-        descrizione = f"""🍚 Cereali: {cereali}
-🥦 Verdure: {verdure}
-🫘 Proteine: {proteine}
-🧂 Condimenti: {condimenti}"""
+        titolo = f"{giorno} - {pasto} {cereali}, {proteine}, {verdure}"
+        descrizione = f"""Cereali: {cereali}
+Verdure: {verdure}
+Proteine: {proteine}
+Condimenti: {condimenti}"""
 
         delta = (idx[giorno] - oggi.weekday()) % 7
         data_evento = oggi + timedelta(days=delta)
@@ -52,7 +52,7 @@ END:VEVENT""")
 
     return "BEGIN:VCALENDAR\nVERSION:2.0\n" + "\n".join(eventi) + "\nEND:VCALENDAR"
 
-# Funzione per creare PDF con emoji usando fpdf2
+# Funzione per creare PDF con emoji semplificate
 def crea_pdf(calendario_db):
     pdf = FPDF()
     font_path = "DejaVuSans.ttf"
@@ -65,7 +65,7 @@ def crea_pdf(calendario_db):
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     pdf.set_font("DejaVu", "", 16)
-    pdf.cell(0, 10, "📅 Pasti settimanali", ln=True)
+    pdf.cell(0, 10, "Pasti settimanali", ln=True)
 
     for giorno in giorni:
         pdf.set_font("DejaVu", "", 14)
@@ -77,18 +77,15 @@ def crea_pdf(calendario_db):
                 None
             )
 
+            pdf.set_font("DejaVu", "", 12)
             if pasti_giorno:
-                row = pasti_giorno
-                pdf.set_font("DejaVu", "", 12)
-                pdf.cell(0, 10, f"{pasto} 🍽️", ln=True)
-                pdf.multi_cell(0, 8, f"""🍚 Cereali: {row['cereali']}
-🥦 Verdure: {row['verdure']}
-🫘 Proteine: {row['proteine']}
-🧂 Condimenti: {row['condimenti']}""")
+                pdf.cell(0, 10, f"{pasto} -", ln=True)
+                pdf.multi_cell(0, 8, f"""Cereali: {pasti_giorno['cereali']}
+Verdure: {pasti_giorno['verdure']}
+Proteine: {pasti_giorno['proteine']}
+Condimenti: {pasti_giorno['condimenti']}""")
             else:
-                pdf.set_font("DejaVu", "", 12)
                 pdf.cell(0, 10, f"{pasto}: nessun pasto salvato", ln=True)
-
 
     buffer = io.BytesIO()
     pdf.output(buffer)
