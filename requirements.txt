@@ -1,6 +1,6 @@
-SQLAlchemy==2.0.44
-streamlit==1.51.0
-fpdf==1.7.2
 supabase==2.24.0
 supabase-auth==2.24.0
 supabase-functions==2.24.0
+streamlit==1.51.0
+fpdf==1.7.2
+python-dotenv==1.0.0
