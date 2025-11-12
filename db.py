@@ -1,12 +1,6 @@
-from sqlalchemy import create_engine, MetaData
-from sqlalchemy.orm import sessionmaker
+from supabase import create_client
 
-engine = create_engine("sqlite:///piatti.db", future=True)
-metadata = MetaData()
-metadata.reflect(bind=engine)
+SUPABASE_URL = "https://kcnrqzcosclwmdngeksr.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjbnJxemNvc2Nsd21kbmdla3NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5MzU4NDYsImV4cCI6MjA3ODUxMTg0Nn0.gRl3IMwSPvz1kwqzDeRZWeDFQYbdE9fWW9oKW5a7S8Y"
 
-Session = sessionmaker(bind=engine, future=True)
-session = Session()
-
-ingredienti = metadata.tables["ingredienti"]
-calendario = metadata.tables["calendario"]
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
