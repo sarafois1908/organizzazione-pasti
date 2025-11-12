@@ -214,7 +214,19 @@ class SelectMappings:
         self.rows = rows
     
     def all(self):
-        return self.rows
+        # Restituisci una lista di dizionari (mappings) per compatibilità con pandas
+        mapped = []
+        for r in self.rows:
+            try:
+                # Se è un Row wrapper, estrai il dizionario interno
+                mapped.append(r._data if hasattr(r, "_data") else dict(r))
+            except Exception:
+                # Fallback: prova a convertire direttamente
+                try:
+                    mapped.append(dict(r))
+                except Exception:
+                    mapped.append(r)
+        return mapped
 
 
 # Wrapper per Session che simula SQLAlchemy
