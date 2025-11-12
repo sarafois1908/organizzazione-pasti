@@ -14,13 +14,23 @@ def get_supabase_config():
     
     # Prova prima con st.secrets (Streamlit Cloud)
     try:
+        # Stampa debug per verificare che st.secrets sia disponibile
+        secrets_keys = list(st.secrets.keys()) if hasattr(st.secrets, 'keys') else []
+        if secrets_keys:
+            print(f"DEBUG: st.secrets trovato con chiavi: {secrets_keys}")
+        
         url = st.secrets.get("SUPABASE_URL")
         key = st.secrets.get("SUPABASE_KEY")
+        
         if url and key:
             print("✅ Caricato da st.secrets (Streamlit Cloud)")
             return url, key
-    except Exception:
-        pass
+        elif secrets_keys:
+            print(f"⚠️  st.secrets disponibile ma chiavi mancanti. Chiavi presenti: {secrets_keys}")
+    except AttributeError:
+        print("DEBUG: st.secrets non disponibile (ambiente locale)")
+    except Exception as e:
+        print(f"DEBUG: Errore accesso st.secrets: {e}")
     
     # Fallback a variabili d'ambiente (incluso .env)
     url = os.getenv("SUPABASE_URL")
@@ -29,16 +39,20 @@ def get_supabase_config():
     if url and key:
         print("✅ Caricato da variabili d'ambiente (.env)")
         return url, key
+    else:
+        print(f"DEBUG: Env vars - URL={bool(url)}, KEY={bool(key)}")
     
     # Se nessuno funziona, errore dettagliato
     raise ValueError(
         "❌ Credenziali Supabase non configurate!\n\n"
-        "Per sviluppo locale:\n"
-        "1. Copia .env.example in .env\n"
-        "2. Aggiungi SUPABASE_URL e SUPABASE_KEY\n"
-        "3. Assicurati che il file .env sia nella root del progetto\n\n"
         "Per Streamlit Cloud:\n"
-        "1. Vai su share.streamlit.io > App Settings > Secrets\n"
+        "1. Vai su share.streamlit.io > App > Settings > Secrets\n"
+        "2. Verifica che i nomi siano ESATTAMENTE:\n"
+        "   SUPABASE_URL = \"https://...\"\n"
+        "   SUPABASE_KEY = \"eyJ...\"\n"
+        "3. Salva e attendi il rebuild\n\n"
+        "Per sviluppo locale:\n"
+        "1. Crea file .env nella root\n"
         "2. Aggiungi SUPABASE_URL e SUPABASE_KEY"
     )
 
