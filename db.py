@@ -1,18 +1,48 @@
 import os
+from dotenv import load_dotenv
 from supabase import create_client, Client
 import streamlit as st
 
+# Carica variabili d'ambiente dal file .env (sviluppo locale)
+load_dotenv()
+
 # Configurazione Supabase - Supporta sia variabili d'ambiente che Streamlit secrets
-try:
-    SUPABASE_URL = st.secrets["SUPABASE_URL"]
-    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-except:
-    SUPABASE_URL = os.getenv("SUPABASE_URL")
-    SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+def get_supabase_config():
+    """Recupera configurazione Supabase da secrets o variabili d'ambiente"""
+    url = None
+    key = None
+    
+    # Prova prima con st.secrets (Streamlit Cloud)
+    try:
+        url = st.secrets.get("SUPABASE_URL")
+        key = st.secrets.get("SUPABASE_KEY")
+        if url and key:
+            print("✅ Caricato da st.secrets (Streamlit Cloud)")
+            return url, key
+    except Exception:
+        pass
+    
+    # Fallback a variabili d'ambiente (incluso .env)
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    
+    if url and key:
+        print("✅ Caricato da variabili d'ambiente (.env)")
+        return url, key
+    
+    # Se nessuno funziona, errore dettagliato
+    raise ValueError(
+        "❌ Credenziali Supabase non configurate!\n\n"
+        "Per sviluppo locale:\n"
+        "1. Copia .env.example in .env\n"
+        "2. Aggiungi SUPABASE_URL e SUPABASE_KEY\n"
+        "3. Assicurati che il file .env sia nella root del progetto\n\n"
+        "Per Streamlit Cloud:\n"
+        "1. Vai su share.streamlit.io > App Settings > Secrets\n"
+        "2. Aggiungi SUPABASE_URL e SUPABASE_KEY"
+    )
 
-if not SUPABASE_URL or not SUPABASE_KEY:
-    raise ValueError("Configura SUPABASE_URL e SUPABASE_KEY in st.secrets o variabili d'ambiente")
-
+SUPABASE_URL, SUPABASE_KEY = get_supabase_config()
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 

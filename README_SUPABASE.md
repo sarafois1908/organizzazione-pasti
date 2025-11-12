@@ -65,13 +65,19 @@ SUPABASE_KEY=your-anon-key
 
 ### Per Streamlit Cloud:
 
-1. Nel dashboard di Streamlit Cloud, vai alle impostazioni del repository
-2. Aggiungi i secrets:
+1. Vai su [share.streamlit.io](https://share.streamlit.io)
+2. Seleziona la tua app
+3. Clicca su **☰** (menu in alto a destra) → **Settings**
+4. Seleziona la tab **Secrets**
+5. Aggiungi nel file `secrets.toml`:
 
-```
+```toml
 SUPABASE_URL = "https://your-project.supabase.co"
 SUPABASE_KEY = "your-anon-key"
 ```
+
+6. Clicca **Save**
+7. L'app si ricaricherà automaticamente
 
 ## 5. Installa le dipendenze
 
@@ -129,25 +135,52 @@ print("✅ Migrazione completata!")
 
 ## Risoluzione problemi
 
+### Errore: "ValueError: Credenziali Supabase non configurate"
+
+**Soluzione:**
+
+**Se stai usando Streamlit Cloud:**
+1. Vai a [share.streamlit.io](https://share.streamlit.io)
+2. Apri la tua app → **☰** → **Settings**
+3. Seleziona **Secrets**
+4. Aggiungi:
+```toml
+SUPABASE_URL = "https://your-project.supabase.co"
+SUPABASE_KEY = "your-anon-key"
+```
+5. Clicca **Save**
+
+**Se stai usando lo sviluppo locale:**
+1. Crea file `.env` nella root del progetto
+2. Aggiungi:
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-anon-key
+```
+3. Riavvia Streamlit
+
 ### Errore: "Import supabase could not be resolved"
 
 Esegui:
 ```bash
-pip install supabase
+pip install -r requirements.txt
 ```
-
-### Errore: "SUPABASE_URL non configurato"
-
-Assicurati di avere:
-- File `.env` con le credenziali
-- Oppure variabili d'ambiente impostate nel sistema
 
 ### Errore: "Unauthorized" da Supabase
 
 Controlla che:
 - La `SUPABASE_KEY` sia corretta (usa la chiave anonima, non quella segreta)
 - Il progetto Supabase sia attivo
-- Le tabelle siano create correttamente
+- Le tabelle siano create correttamente in Supabase
+
+### Come recuperare le credenziali Supabase
+
+1. Accedi a [supabase.com](https://supabase.com)
+2. Seleziona il tuo progetto
+3. Vai a **Project Settings** → **API**
+4. Copia:
+   - **Project URL** → `SUPABASE_URL`
+   - **anon public** key → `SUPABASE_KEY` (⚠️ NON la service_role key!)
 
 ## Prossimi passi
 
